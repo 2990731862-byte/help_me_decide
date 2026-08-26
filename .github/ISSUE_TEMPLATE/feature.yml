@@ -1,0 +1,49 @@
+name: 想做一件事
+description: 新功能、改进、重构、补测试、补文档
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        填完记得在右侧挂 **Milestone**。没有 milestone 的 Issue 不在计划内。
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景：现在是什么样，为什么不行
+      description: 带证据。报错原文、文件和行号、截图都算。别只写"体验不好"。
+      placeholder: |
+        例：提交申请时金额填 0 会被接受，落库后显示 ¥0 的待审批项。
+        server.js 有 amount <= 0 的校验，但走的是 400 分支之外的路径（待确认）。
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: 目标：做完是什么样
+      description: 一句话。
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: |
+        每条都必须是**能判真假的句子**，做完能逐条对照。
+        ✅ 「金额为 0 或负数时接口返回 400，且 requests 表不新增行」
+        ❌ 「金额校验要正确」
+      placeholder: |
+        1.
+        2.
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: 明确不在范围内（可选）
+      description: 写下来能避免 PR 越做越大。
+    validations:
+      required: false
