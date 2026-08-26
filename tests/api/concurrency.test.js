@@ -42,6 +42,28 @@ function heldPost(baseUrl, apiPath, token, payload) {
   };
 }
 
+test('a submit in flight is refused if the session was logged out meanwhile', async t => {
+  const server = await startServer();
+  const api = makeClient(server.baseUrl);
+  t.after(() => server.stop());
+
+  const room = await seedRoom(api, { password: 'pw-logout' });
+  const held = heldPost(server.baseUrl, `/api/rooms/${room.roomId}/requests`, room.author.token, {
+    item: 'Lamp',
+    amount: 20,
+    reason: 'submitted slowly',
+  });
+  await wait(300);
+
+  assert.equal((await api.logout(room.author.token)).status, 200);
+
+  const heldResult = await held.finish();
+  assert.equal(heldResult.status, 401, 'a logged-out session still submitted');
+
+  const listed = await api.listRequests(room.roomId, room.partner.token);
+  assert.equal(listed.data.requests.length, 0, 'the request was stored despite the logout');
+});
+
 test('a submit in flight does not erase concurrent writes', async t => {
   const server = await startServer();
   const api = makeClient(server.baseUrl);
