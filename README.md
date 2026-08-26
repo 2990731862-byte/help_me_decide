@@ -63,4 +63,6 @@ and [AGENTS.md](AGENTS.md) for repo facts an AI assistant needs.
 
 ## Current scope
 
-The app is a tested local / single-instance version. Public deployment, account-based room discovery, token expiry, rate limiting, audit logs and multi-instance database support remain future work.
+The app is a tested local / single-instance version. Public deployment, account-based room discovery, rate limiting and audit logs remain future work.
+
+Multi-instance deployment needs more than pointing two processes at one database: `writeDb()` rebuilds every table on each write, so the processes would keep wiping each other. See issue #7.
