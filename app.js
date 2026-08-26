@@ -12,7 +12,17 @@ function money(value) { return `¥ ${Number(value).toLocaleString('zh-CN')}`; }
 function getRoomSessions() { try { const value = JSON.parse(localStorage.getItem(ROOMS_KEY) || '[]'); return Array.isArray(value) ? value : []; } catch { localStorage.removeItem(ROOMS_KEY); return []; } }
 function saveSession() { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); const rooms = getRoomSessions().filter(item => item.roomId !== session.roomId); rooms.unshift(session); localStorage.setItem(ROOMS_KEY, JSON.stringify(rooms)); }
 function loadSession() { try { const value = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); return value && value.roomId && value.member ? value : null; } catch { localStorage.removeItem(SESSION_KEY); return null; } }
-async function api(path, options = {}) { const headers = { 'Content-Type': 'application/json', ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}), ...(options.headers || {}) }; const response = await fetch(API + path, { ...options, headers }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`); return data; }
+async function api(path, options = {}) { const headers = { 'Content-Type': 'application/json', ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}), ...(options.headers || {}) }; const response = await fetch(API + path, { ...options, headers }); const data = await response.json().catch(() => ({})); if (response.status === 401) expireCurrentSession(); if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`); return data; }
+function expireCurrentSession() {
+  if (!session) return;
+  const expiredRoomId = session.roomId;
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.setItem(ROOMS_KEY, JSON.stringify(getRoomSessions().filter(item => item.roomId !== expiredRoomId)));
+  session = null;
+  requests = [];
+  render();
+  showHome();
+}
 function currentMember() { return session?.member; }
 function isMine(request) { return request.authorId === currentMember()?.id; }
 function render() {
@@ -75,3 +85,4 @@ function ensureRoomModal() {
     if (modal) modal.hidden = true;
   }
 }
+

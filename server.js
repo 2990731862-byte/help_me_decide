@@ -9,6 +9,7 @@ const ROOT = __dirname;
 const DATA_FILE = process.env.APPROVAL_LEGACY_DATA || path.join(ROOT, 'data.json');
 const DB_FILE = process.env.APPROVAL_DB_PATH || path.join(ROOT, 'approval.sqlite');
 const EMPTY_DB = { rooms: [], sessions: [] };
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
 const sqlite = new DatabaseSync(DB_FILE);
 
 function json(res, status, body) {
@@ -28,8 +29,8 @@ function samePassword(password, record) { const actual = hashPassword(password, 
 function hashToken(token) { return crypto.createHash('sha256').update(String(token)).digest('hex'); }
 function id(prefix) { return `${prefix}_${crypto.randomBytes(6).toString('hex')}`; }
 function getToken(req) { const header = req.headers.authorization || ''; return header.startsWith('Bearer ') ? header.slice(7) : ''; }
-function issueSession(db, roomId, memberId) { const token = crypto.randomBytes(32).toString('hex'); db.sessions.push({ tokenHash: hashToken(token), roomId, memberId, createdAt: new Date().toISOString() }); return token; }
-function getSession(req, db, roomId) { const token = getToken(req); if (!token) return null; const session = db.sessions.find(item => item.tokenHash === hashToken(token)); return session && session.roomId === roomId ? session : null; }
+function issueSession(db, roomId, memberId) { const token = crypto.randomBytes(32).toString('hex'); const now = new Date(); db.sessions.push({ tokenHash: hashToken(token), roomId, memberId, createdAt: now.toISOString(), expiresAt: new Date(now.getTime() + SESSION_TTL_MS).toISOString() }); return token; }
+function getSession(req, db, roomId) { const token = getToken(req); if (!token) return null; const tokenHash = hashToken(token); const session = db.sessions.find(item => item.tokenHash === tokenHash); if (!session || session.roomId !== roomId) return null; if (!session.expiresAt || Date.parse(session.expiresAt) <= Date.now()) { sqlite.prepare('DELETE FROM sessions WHERE token_hash = ?').run(tokenHash); return null; } return session; }
 function cleanRoom(room) { return { id: room.id, createdAt: room.createdAt, members: room.members.map(({ id, nickname }) => ({ id, nickname })), requestCount: room.requests.length }; }
 function cleanRequest(request) { return { ...request }; }
 function findRoom(db, roomId) { return db.rooms.find(room => room.id === roomId); }
@@ -38,8 +39,10 @@ sqlite.exec(`PRAGMA journal_mode = WAL;
 CREATE TABLE IF NOT EXISTS rooms (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, password_salt TEXT NOT NULL, password_hash TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS members (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, nickname TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, room_id TEXT NOT NULL, author_id TEXT NOT NULL, author_name TEXT NOT NULL, item TEXT NOT NULL, amount REAL NOT NULL, reason TEXT NOT NULL, status TEXT NOT NULL, note TEXT NOT NULL, created_at TEXT NOT NULL, decided_at TEXT);
-CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, room_id TEXT NOT NULL, member_id TEXT NOT NULL, created_at TEXT NOT NULL);`);
+CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, room_id TEXT NOT NULL, member_id TEXT NOT NULL, created_at TEXT NOT NULL, expires_at TEXT NOT NULL);`);
 
+const sessionColumns = sqlite.prepare('PRAGMA table_info(sessions)').all().map(column => column.name);
+if (!sessionColumns.includes('expires_at')) sqlite.exec('ALTER TABLE sessions ADD COLUMN expires_at TEXT');
 function parseLegacyDb() {
   try {
     const raw = fs.readFileSync(DATA_FILE, 'utf8').replace(/^\uFEFF/, '').trim();
@@ -51,7 +54,7 @@ function readDb() {
   const rooms = sqlite.prepare('SELECT id, created_at, password_salt, password_hash FROM rooms').all().map(row => ({ id: row.id, createdAt: row.created_at, password: { salt: row.password_salt, hash: row.password_hash }, members: [], requests: [] }));
   const members = sqlite.prepare('SELECT id, room_id, nickname FROM members').all();
   const requests = sqlite.prepare('SELECT id, room_id, author_id, author_name, item, amount, reason, status, note, created_at, decided_at FROM requests').all();
-  const sessions = sqlite.prepare('SELECT token_hash, room_id, member_id, created_at FROM sessions').all().map(row => ({ tokenHash: row.token_hash, roomId: row.room_id, memberId: row.member_id, createdAt: row.created_at }));
+  const sessions = sqlite.prepare('SELECT token_hash, room_id, member_id, created_at, expires_at FROM sessions').all().map(row => ({ tokenHash: row.token_hash, roomId: row.room_id, memberId: row.member_id, createdAt: row.created_at, expiresAt: row.expires_at }));
   for (const member of members) { const room = rooms.find(item => item.id === member.room_id); if (room) room.members.push({ id: member.id, nickname: member.nickname }); }
   for (const request of requests) { const room = rooms.find(item => item.id === request.room_id); if (room) room.requests.push({ id: request.id, authorId: request.author_id, authorName: request.author_name, item: request.item, amount: request.amount, reason: request.reason, status: request.status, note: request.note, createdAt: request.created_at, decidedAt: request.decided_at }); }
   return { rooms, sessions };
@@ -64,9 +67,9 @@ function writeDb(db) {
     const roomInsert = sqlite.prepare('INSERT INTO rooms (id, created_at, password_salt, password_hash) VALUES (?, ?, ?, ?)');
     const memberInsert = sqlite.prepare('INSERT INTO members (id, room_id, nickname) VALUES (?, ?, ?)');
     const requestInsert = sqlite.prepare('INSERT INTO requests (id, room_id, author_id, author_name, item, amount, reason, status, note, created_at, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    const sessionInsert = sqlite.prepare('INSERT INTO sessions (token_hash, room_id, member_id, created_at) VALUES (?, ?, ?, ?)');
+    const sessionInsert = sqlite.prepare('INSERT INTO sessions (token_hash, room_id, member_id, created_at, expires_at) VALUES (?, ?, ?, ?, ?)');
     for (const room of safeDb.rooms) { roomInsert.run(room.id, room.createdAt, room.password.salt, room.password.hash); for (const member of room.members || []) memberInsert.run(member.id, room.id, member.nickname); for (const request of room.requests || []) requestInsert.run(request.id, room.id, request.authorId, request.authorName, request.item, request.amount, request.reason, request.status, request.note || '', request.createdAt, request.decidedAt || null); }
-    for (const session of safeDb.sessions) sessionInsert.run(session.tokenHash, session.roomId, session.memberId, session.createdAt);
+    for (const session of safeDb.sessions) sessionInsert.run(session.tokenHash, session.roomId, session.memberId, session.createdAt, session.expiresAt || new Date(Date.now() + SESSION_TTL_MS).toISOString());
     sqlite.exec('COMMIT');
   } catch (error) { sqlite.exec('ROLLBACK'); throw error; }
 }
@@ -128,5 +131,6 @@ const server = http.createServer(async (req, res) => {
 });
 server.listen(PORT, () => console.log(`Approval room API listening on http://localhost:${PORT}`));
 process.on('SIGINT', () => { sqlite.close(); process.exit(0); });
+
 
 
