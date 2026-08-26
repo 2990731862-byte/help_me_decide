@@ -1,0 +1,69 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>批不批 · 双人消费审批</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">↗</span><span>批不批</span></div>
+        <p class="brand-sub">和朋友一起，把钱花在刀刃上。</p>
+        <nav>
+          <button class="nav-item active" data-view="dashboard"><span>▦</span>消费面板</button>
+          <button class="nav-item" data-view="history"><span>◷</span>全部记录</button>
+        </nav>
+        <div class="side-note">
+          <span class="note-icon">✦</span>
+          <div><strong>今日提醒</strong><p>冲动消费，先等 10 分钟。</p></div>
+        </div>
+        <div class="sidebar-bottom"><span class="online-dot"></span> 与「小鱼」共享中</div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="eyebrow">AUGUST 2026 <span>·</span> SHARED SPACE</div>
+          <div class="profile-switch">
+            <span class="viewing">当前视角</span>
+            <button id="roleToggle" class="role-pill"><span id="roleAvatar">小</span><span id="roleName">我 · 小满</span><span class="chevron">⌄</span></button>
+          </div>
+        </header>
+
+        <section class="hero">
+          <div><p class="kicker">GOOD SPENDING CLUB</p><h1>今天想买什么？</h1><p class="hero-copy">先写下来，让理智的朋友帮你看一眼。</p></div>
+          <button id="newRequest" class="primary-button"><span>＋</span> 提交消费申请</button>
+        </section>
+
+        <section class="stats-grid">
+          <div class="stat-card accent"><div class="stat-label">本月已批准</div><div class="stat-value" id="approvedTotal">¥ 0</div><div class="stat-foot positive">↑ 12% <span>比上月少花</span></div></div>
+          <div class="stat-card"><div class="stat-label">等待朋友审批</div><div class="stat-value" id="pendingCount">0 <small>件</small></div><div class="stat-foot muted">耐心等等，好朋友会认真看</div></div>
+          <div class="stat-card"><div class="stat-label">本月省下</div><div class="stat-value">¥ 0</div><div class="stat-foot positive">✦ 多亏了小鱼的铁面无私</div></div>
+        </section>
+
+        <section class="section-head"><div><h2 id="sectionTitle">最近的申请</h2><p id="sectionSubtitle">记住，想买不等于需要买。</p></div><div class="filters"><button class="filter active" data-filter="all">全部</button><button class="filter" data-filter="pending">待审批</button><button class="filter" data-filter="approved">已通过</button><button class="filter" data-filter="purchased">&#24050;&#36141;&#20080;</button><button class="filter" data-filter="rejected">已驳回</button></div></section>
+        <section id="requestList" class="request-list"></section>
+        <div id="emptyState" class="empty-state" hidden><div>☼</div><h3>这里还没有申请</h3><p>把想买的东西先记下来，给理智一个发言的机会。</p></div>
+      </main>
+    </div>
+
+    <div id="modal" class="modal-backdrop" hidden>
+      <form id="requestForm" class="modal-card">
+        <button type="button" id="closeModal" class="close-button">×</button>
+        <p class="kicker">NEW REQUEST</p><h2>想买点什么？</h2><p class="modal-copy">把理由说清楚，朋友才知道该不该批。</p>
+        <label>物品名称<input id="itemInput" required placeholder="比如：一杯奶茶" /></label>
+        <div class="form-row"><label>预计金额<input id="amountInput" type="number" min="0" step="0.01" required placeholder="¥ 0.00" /></label></div>
+        <label>申请理由<textarea id="reasonInput" required placeholder="为什么现在需要它？"></textarea></label>
+        <button class="primary-button submit-button" type="submit">提交，等朋友审批</button>
+      </form>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
+
+
+

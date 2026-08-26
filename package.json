@@ -1,0 +1,14 @@
+﻿{
+  "name": "approval-room",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test:syntax": "node --check server.js && node --check app.js && node --check tests/sqlite-five-regression.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

@@ -1,0 +1,14 @@
+﻿node_modules/
+approval.sqlite*
+data.json*
+*.tmp
+*.log
+.env
+handoff/
+tests/*.sqlite
+tests/*-state.json
+playwright-report/
+test-results/
+
+*-test.json
+
