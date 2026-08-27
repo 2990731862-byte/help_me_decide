@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "approval-room",
   "version": "1.0.0",
   "private": true,
@@ -6,9 +6,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test:syntax": "node --check server.js && node --check app.js && node --check tests/sqlite-five-regression.js"
+    "test": "node --test \"tests/api/**/*.test.js\"",
+    "test:syntax": "node --check server.js && node --check app.js"
   },
-  "devDependencies": {
-    "playwright": "^1.55.0"
+  "engines": {
+    "node": ">=24.0.0"
   }
 }

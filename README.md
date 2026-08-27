@@ -17,16 +17,19 @@ A two-person shared spending approval app.
 - Frontend: HTML, CSS, vanilla JavaScript.
 - Backend: Node.js native HTTP server.
 - Storage: Node built-in SQLite.
-- Tests: Playwright and Node syntax checks.
+- Tests: `node:test` assertions over the REST API; no browser required.
 
 ## Local run
 
-~~~powershell
-cd D:\approval
+~~~bash
+git clone https://github.com/2990731862-byte/help_me_decide.git
+cd help_me_decide
 npm install
-npm run test:syntax
+npm test
 npm start
 ~~~
+
+Requires Node 24 or newer (`server.js` uses `node:sqlite`).
 
 Open http://localhost:8787.
 
@@ -43,7 +46,8 @@ Open http://localhost:8787.
 - `app.js`: room, session, request, approval and API client logic.
 - `server.js`: HTTP API, SQLite storage, authentication and static files.
 - `Dockerfile`: generic container build.
-- `tests/`: regression tests.
+- `tests/api/`: API-level regression tests, one file per product area.
+- `tests/helpers/`: throwaway server and API client used by the tests.
 
 ## Security notes
 
@@ -52,6 +56,13 @@ Open http://localhost:8787.
 - The server ignores forged member IDs and uses the authenticated session member.
 - Runtime databases and local secrets must not be committed.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the Issue → branch → PR → CI → review flow,
+and [AGENTS.md](AGENTS.md) for repo facts an AI assistant needs.
+
 ## Current scope
 
-The app is a tested local / single-instance version. Public deployment, account-based room discovery, token expiry, rate limiting, audit logs and multi-instance database support remain future work.
+The app is a tested local / single-instance version. Public deployment, account-based room discovery, rate limiting and audit logs remain future work.
+
+Multi-instance deployment needs more than pointing two processes at one database: `writeDb()` rebuilds every table on each write, so the processes would keep wiping each other. See issue #7.

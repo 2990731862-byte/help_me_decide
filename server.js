@@ -109,10 +109,17 @@ const server = http.createServer(async (req, res) => {
       const db = readDb(); const room = findRoom(db, requestsMatch[1]); if (!room) return sendError(res, 404, 'room not found'); const auth = getSession(req, db, room.id); if (!auth) return sendError(res, 401, 'authentication required');
       if (req.method === 'GET') return json(res, 200, { requests: room.requests.map(cleanRequest) });
       if (req.method === 'POST') {
-        const input = await body(req); const member = room.members.find(item => item.id === auth.memberId); const amount = Number(input.amount);
+        const input = await body(req);
+        // writeDb() rebuilds every table from the snapshot it is handed, so the snapshot has to be
+        // taken after the body arrives: anything written while this handler waited would be erased.
+        const fresh = readDb(); const freshRoom = findRoom(fresh, requestsMatch[1]); if (!freshRoom) return sendError(res, 404, 'room not found');
+        // Re-check the session against the same fresh snapshot: a logout during the wait must not
+        // be able to submit.
+        const freshAuth = getSession(req, fresh, freshRoom.id); if (!freshAuth) return sendError(res, 401, 'authentication required');
+        const member = freshRoom.members.find(item => item.id === freshAuth.memberId); const amount = Number(input.amount);
         if (!member || !input.item || !input.reason || !Number.isFinite(amount) || amount <= 0) return sendError(res, 400, 'invalid request');
         const request = { id: id('request'), authorId: member.id, authorName: member.nickname, item: String(input.item).trim().slice(0, 100), amount, reason: String(input.reason).trim().slice(0, 1000), status: 'pending', note: '', createdAt: new Date().toISOString(), decidedAt: null };
-        room.requests.unshift(request); writeDb(db); return json(res, 201, { request });
+        freshRoom.requests.unshift(request); writeDb(fresh); return json(res, 201, { request });
       }
     }
     const decisionMatch = url.pathname.match(/^\/api\/rooms\/([^/]+)\/requests\/([^/]+)$/);

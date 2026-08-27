@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Pinned to the runtime the Dockerfile ships (node:24), because
+          # node:sqlite behaves differently on older majors.
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Syntax check
+        run: npm run test:syntax
+
+      - name: Tests
+        run: npm test
