@@ -7,9 +7,15 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test \"tests/api/**/*.test.js\"",
-    "test:syntax": "node --check server.js && node --check app.js"
+    "test:syntax": "node --check server.js && node --check app.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:bom": "node scripts/check-bom.js"
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
   }
 }

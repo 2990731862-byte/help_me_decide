@@ -1,0 +1,4 @@
+# One collaborator develops on Windows: without this, line endings flip back and
+# forth and produce diffs that contain no change.
+* text=auto eol=lf
+package-lock.json -diff
