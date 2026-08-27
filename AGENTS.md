@@ -16,7 +16,11 @@
 
 **`node --test tests/api/` 在 Node 24 上会失败**（把目录当模块解析）。必须用 glob：`node --test "tests/api/**/*.test.js"`。已经写在 `package.json` 里，别"顺手简化"回去。
 
-**仓里 15 个文件带 UTF-8 BOM**，`style.css` 整个文件是一行，`app.js` 最长行 2067 字符。**这些是已知的、有专门 Issue 的问题，不要在做别的事情时顺手格式化**——那个 diff 会淹掉真正的改动。`package.json` 的 BOM 已经去掉了，因为 BOM 让它不是合法 JSON；不要把 BOM 加回任何文件。
+**格式由 Prettier 统一管理，CI 会检查。** 改完跑 `npm run format`，别手动对齐。配置在 `.prettierrc.json`，`.prettierignore` 里排除了 Markdown（表格会被打乱）和 `package-lock.json`。
+
+**不要引入 UTF-8 BOM。** 仓里曾有 8 个文件带 BOM，已全部清除；`package.json` 的 BOM 曾让它不是合法 JSON。`.editorconfig` 与 `.gitattributes` 已把编码和行尾锁成 UTF-8 + LF。
+
+**`app.js` 与 `server.js` 里仍有超过 120 字符的行**，全部是 Prettier 拆不动的字符串字面量（HTML 模板串、SQL 语句）。拆它们要改字符串内容，属于重构不属于格式化，见 issue #10。**不要在做别的事情时顺手拆。**
 
 **`writeDb()` 每次写入都把 rooms / members / requests / sessions 四张表全删再全插。** 不要假设它是增量更新。任何关于并发或性能的推断先读那个函数。
 

@@ -1,4 +1,4 @@
-﻿# Approval Room
+# Approval Room
 
 A two-person shared spending approval app.
 

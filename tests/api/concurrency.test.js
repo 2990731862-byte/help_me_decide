@@ -29,8 +29,12 @@ function heldPost(baseUrl, apiPath, token, payload) {
     request.on('error', reject);
     request.on('response', response => {
       let raw = '';
-      response.on('data', chunk => { raw += chunk; });
-      response.on('end', () => resolve({ status: response.statusCode, data: JSON.parse(raw || '{}') }));
+      response.on('data', chunk => {
+        raw += chunk;
+      });
+      response.on('end', () =>
+        resolve({ status: response.statusCode, data: JSON.parse(raw || '{}') }),
+      );
     });
   });
   request.flushHeaders();
@@ -82,7 +86,11 @@ test('a submit in flight does not erase concurrent writes', async t => {
   // Precondition: the held submit really is still in flight. Without this the
   // test could pass simply because the timing never produced a window.
   const duringA = await api.listRequests(roomA.roomId, roomA.author.token);
-  assert.equal(duringA.data.requests.length, 0, 'the held submit already committed; the test proves nothing');
+  assert.equal(
+    duringA.data.requests.length,
+    0,
+    'the held submit already committed; the test proves nothing',
+  );
 
   // Other work lands while the submit is parked.
   const otherSubmit = await api.submitRequest(roomB.roomId, roomB.author.token, {

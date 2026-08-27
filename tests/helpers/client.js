@@ -11,7 +11,11 @@ function makeClient(baseUrl) {
     });
     const text = await response.text();
     let data = {};
-    try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
     return { status: response.status, data };
   }
 
@@ -21,7 +25,8 @@ function makeClient(baseUrl) {
     createRoom: body => call('POST', '/api/rooms', { body }),
     joinRoom: (roomId, body) => call('POST', `/api/rooms/${roomId}`, { body }),
     listRequests: (roomId, token) => call('GET', `/api/rooms/${roomId}/requests`, { token }),
-    submitRequest: (roomId, token, body) => call('POST', `/api/rooms/${roomId}/requests`, { token, body }),
+    submitRequest: (roomId, token, body) =>
+      call('POST', `/api/rooms/${roomId}/requests`, { token, body }),
     decide: (roomId, requestId, token, body) =>
       call('PATCH', `/api/rooms/${roomId}/requests/${requestId}`, { token, body }),
     logout: token => call('POST', '/api/logout', { token }),

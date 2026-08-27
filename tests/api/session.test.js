@@ -57,7 +57,8 @@ test('sessions', async t => {
     const room = await seedRoom(api);
     const db = new DatabaseSync(server.dbPath);
     const past = new Date(Date.now() - 60_000).toISOString();
-    const updated = db.prepare('UPDATE sessions SET expires_at = ? WHERE room_id = ? AND member_id = ?')
+    const updated = db
+      .prepare('UPDATE sessions SET expires_at = ? WHERE room_id = ? AND member_id = ?')
       .run(past, room.roomId, room.author.member.id);
     db.close();
     assert.equal(Number(updated.changes), 1, 'test setup failed to expire the session');
@@ -65,7 +66,8 @@ test('sessions', async t => {
     assert.equal((await api.listRequests(room.roomId, room.author.token)).status, 401);
 
     const after = new DatabaseSync(server.dbPath);
-    const left = after.prepare('SELECT COUNT(*) AS n FROM sessions WHERE member_id = ?')
+    const left = after
+      .prepare('SELECT COUNT(*) AS n FROM sessions WHERE member_id = ?')
       .get(room.author.member.id);
     after.close();
     assert.equal(Number(left.n), 0, 'expired session row was not deleted');

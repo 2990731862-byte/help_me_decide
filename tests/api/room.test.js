@@ -32,7 +32,10 @@ test('rooms', async t => {
 
   await t.test('the second member joins with the room password', async () => {
     const created = await api.createRoom({ nickname: 'Ann', password: 'pw-join' });
-    const joined = await api.joinRoom(created.data.room.id, { nickname: 'Ben', password: 'pw-join' });
+    const joined = await api.joinRoom(created.data.room.id, {
+      nickname: 'Ben',
+      password: 'pw-join',
+    });
     assert.equal(joined.status, 200);
     assert.equal(joined.data.room.members.length, 2);
     assert.notEqual(joined.data.token, created.data.token);
@@ -40,7 +43,10 @@ test('rooms', async t => {
 
   await t.test('joining with the wrong password is rejected', async () => {
     const created = await api.createRoom({ nickname: 'Ann', password: 'pw-right' });
-    const joined = await api.joinRoom(created.data.room.id, { nickname: 'Ben', password: 'pw-wrong' });
+    const joined = await api.joinRoom(created.data.room.id, {
+      nickname: 'Ben',
+      password: 'pw-wrong',
+    });
     assert.equal(joined.status, 401);
   });
 
@@ -53,7 +59,10 @@ test('rooms', async t => {
   await t.test('a third member cannot join a full room', async () => {
     const created = await api.createRoom({ nickname: 'Ann', password: 'pw-full' });
     const roomId = created.data.room.id;
-    assert.equal((await api.joinRoom(roomId, { nickname: 'Ben', password: 'pw-full' })).status, 200);
+    assert.equal(
+      (await api.joinRoom(roomId, { nickname: 'Ben', password: 'pw-full' })).status,
+      200,
+    );
     const third = await api.joinRoom(roomId, { nickname: 'Cat', password: 'pw-full' });
     assert.equal(third.status, 409);
     assert.equal(third.data.error, 'room is full');

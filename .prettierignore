@@ -1,0 +1,5 @@
+package-lock.json
+# Markdown holds hand-aligned tables that reflowing would scramble.
+*.md
+# Issue forms are read by GitHub, not by humans editing them.
+.github/ISSUE_TEMPLATE/

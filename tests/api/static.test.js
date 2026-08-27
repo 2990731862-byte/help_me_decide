@@ -7,7 +7,11 @@ test('static files', async t => {
   const server = await startServer();
   t.after(() => server.stop());
 
-  for (const [route, type] of [['/', 'text/html'], ['/style.css', 'text/css'], ['/app.js', 'javascript']]) {
+  for (const [route, type] of [
+    ['/', 'text/html'],
+    ['/style.css', 'text/css'],
+    ['/app.js', 'javascript'],
+  ]) {
     await t.test(`${route} is served`, async () => {
       const response = await fetch(server.baseUrl + route);
       assert.equal(response.status, 200);
