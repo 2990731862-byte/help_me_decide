@@ -60,7 +60,9 @@ async function startServer() {
       },
     });
     let stderr = '';
-    next.stderr.on('data', chunk => { stderr += chunk; });
+    next.stderr.on('data', chunk => {
+      stderr += chunk;
+    });
     next.on('exit', code => {
       if (code && code !== 0 && stderr) process.stderr.write(`server stderr:\n${stderr}`);
     });

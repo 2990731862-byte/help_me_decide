@@ -20,7 +20,11 @@ test('persistence', async t => {
 
   await t.test('a room, its members and one request land in SQLite exactly once', async () => {
     const room = await seedRoom(api);
-    await api.submitRequest(room.roomId, room.author.token, { item: 'Kettle', amount: 39, reason: 'Old one leaks' });
+    await api.submitRequest(room.roomId, room.author.token, {
+      item: 'Kettle',
+      amount: 39,
+      reason: 'Old one leaks',
+    });
 
     assert.equal(count(server.dbPath, 'rooms'), 1);
     assert.equal(count(server.dbPath, 'members'), 2);
@@ -31,10 +35,13 @@ test('persistence', async t => {
   await t.test('decisions survive a server restart', async () => {
     const room = await seedRoom(api);
     const created = await api.submitRequest(room.roomId, room.author.token, {
-      item: 'Monitor', amount: 899, reason: 'Second screen',
+      item: 'Monitor',
+      amount: 899,
+      reason: 'Second screen',
     });
     await api.decide(room.roomId, created.data.request.id, room.partner.token, {
-      action: 'rejected', note: 'Next quarter',
+      action: 'rejected',
+      note: 'Next quarter',
     });
 
     await server.restart();
