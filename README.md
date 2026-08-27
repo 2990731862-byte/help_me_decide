@@ -1,4 +1,4 @@
-# Approval Room
+﻿# Approval Room
 
 A two-person shared spending approval app.
 
@@ -57,6 +57,9 @@ Open http://localhost:8787.
 - Runtime databases and local secrets must not be committed.
 
 ## Contributing
+
+New here? Start with [ONBOARDING.md](ONBOARDING.md) — a walkthrough from a clean machine to a
+merged first change.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the Issue → branch → PR → CI → review flow,
 and [AGENTS.md](AGENTS.md) for repo facts an AI assistant needs.
